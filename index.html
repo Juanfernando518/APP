@@ -12,7 +12,7 @@
 <body>
 
     <nav>
-        <h1>UPS VIDEO</h1>
+        <h1>UPS Streaming</h1>
         <div class="menu">
             <button onclick="mostrarSeccion('movies')">Películas</button>
             <button onclick="mostrarSeccion('series')">Series</button>
@@ -22,9 +22,27 @@
     </nav>
 
     <div class="filter-bar">
-        <input type="text" id="search-input" placeholder="Buscar por nombre..." oninput="filtrarPorNombre()">
-        <button onclick="reporteTopDescargas()">🔥 Top Descargas (+8000)</button>
-        <button onclick="cargarContenido()">🔄 Mostrar Todo</button>
+        <div class="search-group">
+            <input type="text" id="search-input" placeholder="Buscar por nombre..." oninput="filtrarPorNombre()">
+            <button onclick="reporteTopDescargas()">🔥 Top Descargas (+8000)</button>
+            <button onclick="cargarContenido()">🔄 Mostrar Todo</button>
+        </div>
+
+        <div class="filtros-extra" style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+            <label style="color: white; font-size: 0.9em;">Estrenos entre:</label>
+            <input type="date" id="fecha-inicio">
+            <input type="date" id="fecha-fin">
+            <button onclick="filtrarPorFechas()">📅 Filtrar por Fecha</button>
+
+            <select id="genero-select" onchange="filtrarPorGenero()" style="padding: 8px; border-radius: 5px; background: #333; color: white; border: 1px solid #555;">
+                <option value="">Filtrar por Género</option>
+                <option value="Acción">Acción</option>
+                <option value="Ciencia Ficción">Ciencia Ficción</option>
+                <option value="Drama">Drama</option>
+                <option value="Comedia">Comedia</option>
+                <option value="Terror">Terror</option>
+            </select>
+        </div>
     </div>
 
     <div id="reporte-section" style="display:none; padding: 20px; background: white; margin: 20px; border-radius: 10px;">

@@ -135,3 +135,54 @@ nav {
 
 .btn-edit:hover { background: #e0a800; }
 .btn-delete:hover { background: #c82333; }
+
+/* Contenedor de filtros extra */
+.filtros-extra {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #333;
+    margin-top: 15px;
+}
+
+.filtros-extra label {
+    font-weight: bold;
+    margin-right: 5px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Estilo para los inputs de fecha y el select */
+.filtros-extra input[type="date"], 
+.filtros-extra select {
+    background: #222;
+    color: white;
+    border: 1px solid #444;
+    padding: 8px 12px;
+    border-radius: 4px;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.filtros-extra input[type="date"]:focus, 
+.filtros-extra select:focus {
+    border-color: #e50914; /* Rojo Netflix */
+    box-shadow: 0 0 5px rgba(229, 9, 20, 0.5);
+}
+
+/* Botón específico de filtrado */
+.filtros-extra button {
+    background-color: #e50914;
+    color: white;
+    font-weight: bold;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.filtros-extra button:hover {
+    background-color: #f40612;
+    transform: scale(1.02);
+}
