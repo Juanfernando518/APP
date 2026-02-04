@@ -15,24 +15,24 @@ async function cargarContenido() {
         // Películas
         const movies = await pb.collection('Movies').getFullList({ expand: 'genres,cast' });
         const movieContainer = document.getElementById('movies-container');
-        renderizarCards(movies, movieContainer);
+        renderizarCards(movies, movieContainer, 'Movies');
 
         // Series
         const series = await pb.collection('Series').getFullList({ expand: 'genres' });
         const seriesContainer = document.getElementById('series-container');
         seriesContainer.innerHTML = '';
         series.forEach(item => {
-            // URL con bypass para imágenes de Series
             const imgUrl = item.video_file 
                 ? `${pb.baseUrl}/api/files/${item.collectionId}/${item.id}/${item.video_file}?ngrok-skip-browser-warning=1`
                 : 'https://via.placeholder.com/200x280';
             
             seriesContainer.innerHTML += `
                 <div class="card">
-                    <img src="${imgUrl}" alt="${item.name}">
+                    <img src="${imgUrl}" alt="${item.name}" onclick="registrarDescargaYVer('${item.id}', 'Series')" style="cursor:pointer">
                     <div class="card-info">
                         <h3>${item.name}</h3>
                         <p>Temporadas: ${item.number_seasons}</p>
+                        <span class="badge">⬇ <span id="count-${item.id}">${item.downloads || 0}</span></span>
                         <small>Estreno: ${item.relase_date ? item.relase_date.split(' ')[0] : 'N/A'}</small>
                     </div>
                 </div>`;
@@ -43,28 +43,58 @@ async function cargarContenido() {
 }
 
 // --- FUNCIÓN DE RENDERIZADO DE CARDS ---
-function renderizarCards(lista, contenedor) {
+function renderizarCards(lista, contenedor, coleccion) {
     contenedor.innerHTML = ''; 
     lista.forEach(item => {
-        // URL con bypass para imágenes de Películas
         const imgUrl = item.video_file 
             ? `${pb.baseUrl}/api/files/${item.collectionId}/${item.id}/${item.video_file}?ngrok-skip-browser-warning=1`
             : 'https://via.placeholder.com/200x280';
         
         contenedor.innerHTML += `
             <div class="card" id="card-${item.id}">
-                <img src="${imgUrl}" onclick="verDetalles('${item.id}', 'Movies')" style="cursor:pointer" onerror="this.src='https://via.placeholder.com/200x280'">
+                <img src="${imgUrl}" onclick="registrarDescargaYVer('${item.id}', '${coleccion}')" style="cursor:pointer" onerror="this.src='https://via.placeholder.com/200x280'">
                 <div class="card-info">
                     <h3>${item.name}</h3>
-                    <span class="badge">⬇ ${item.downloads}</span>
+                    <span class="badge">⬇ <span id="count-${item.id}">${item.downloads || 0}</span></span>
                     <div class="acciones">
                         <button class="btn-edit" onclick="prepararEdicion('${item.id}', '${item.name}')">✏️</button>
-                        <button class="btn-delete" onclick="eliminarRegistro('${item.id}', 'Movies')">🗑️</button>
+                        <button class="btn-delete" onclick="eliminarRegistro('${item.id}', '${coleccion}')">🗑️</button>
                     </div>
                 </div>
             </div>`;
     });
 }
+
+// --- NUEVA FUNCIÓN: REGISTRAR DESCARGA (VISTA) Y VER DETALLES ---
+window.registrarDescargaYVer = async (id, coleccion) => {
+    try {
+        // 1. Obtener el registro actual para saber cuántas descargas tiene
+        const record = await pb.collection(coleccion).getOne(id);
+        
+        // 2. Incrementar el contador (+1)
+        const nuevoTotal = (record.downloads || 0) + 1;
+        
+        // 3. Actualizar en PocketBase
+        await pb.collection(coleccion).update(id, {
+            "downloads": nuevoTotal
+        });
+
+        // 4. Actualizar el número en la interfaz inmediatamente
+        const contadorUI = document.getElementById(`count-${id}`);
+        if (contadorUI) {
+            contadorUI.innerText = nuevoTotal;
+            contadorUI.parentElement.style.backgroundColor = "#2ecc71"; // Efecto visual verde al subir
+            setTimeout(() => { contadorUI.parentElement.style.backgroundColor = "#e50914"; }, 500);
+        }
+
+        // 5. Mostrar el modal de detalles
+        window.verDetalles(id, coleccion);
+
+    } catch (err) {
+        console.error("Error al procesar la descarga:", err);
+        window.verDetalles(id, coleccion); // Abrir modal aunque falle el contador
+    }
+};
 
 // --- GESTIÓN DE ACTORES ---
 document.getElementById('actor-form').addEventListener('submit', async (e) => {
@@ -91,7 +121,7 @@ window.reporteTopDescargas = async () => {
         filter: 'downloads >= 8000', 
         sort: '-downloads' 
     });
-    renderizarCards(topMovies, document.getElementById('movies-container'));
+    renderizarCards(topMovies, document.getElementById('movies-container'), 'Movies');
 };
 
 window.filtrarPorNombre = async () => {
@@ -99,7 +129,7 @@ window.filtrarPorNombre = async () => {
     const resultados = await pb.collection('Movies').getFullList({ 
         filter: `name ~ "${busqueda}"` 
     });
-    renderizarCards(resultados, document.getElementById('movies-container'));
+    renderizarCards(resultados, document.getElementById('movies-container'), 'Movies');
 };
 
 // --- ELIMINAR Y EDITAR ---
