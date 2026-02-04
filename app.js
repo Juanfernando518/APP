@@ -1,7 +1,7 @@
 // NUEVA CONEXIÓN CON NGROK
 const pb = new PocketBase("https://trifid-kerry-nonunitable.ngrok-free.dev");
 
-// Agregamos el header para saltar la advertencia de ngrok en todas las peticiones
+// Saltamos la advertencia de ngrok para peticiones de datos (API)
 pb.beforeSend = function (url, options) {
     options.headers = Object.assign({}, options.headers, {
         'ngrok-skip-browser-warning': 'true',
@@ -17,12 +17,12 @@ async function cargarContenido() {
         const movieContainer = document.getElementById('movies-container');
         renderizarCards(movies, movieContainer);
 
-        // Series (Respetando tu campo 'relase_date')
+        // Series
         const series = await pb.collection('Series').getFullList({ expand: 'genres' });
         const seriesContainer = document.getElementById('series-container');
         seriesContainer.innerHTML = '';
         series.forEach(item => {
-            // REEMPLAZA TAMBIÉN AQUÍ:
+            // URL con bypass para imágenes de Series
             const imgUrl = item.video_file 
                 ? `${pb.baseUrl}/api/files/${item.collectionId}/${item.id}/${item.video_file}?ngrok-skip-browser-warning=1`
                 : 'https://via.placeholder.com/200x280';
@@ -42,18 +42,18 @@ async function cargarContenido() {
     }
 }
 
-// --- ACTUALIZACIÓN EN LA FUNCIÓN DE RENDERIZADO ---
+// --- FUNCIÓN DE RENDERIZADO DE CARDS ---
 function renderizarCards(lista, contenedor) {
     contenedor.innerHTML = ''; 
     lista.forEach(item => {
-        // ESTA ES LA LÍNEA QUE DEBES REEMPLAZAR:
+        // URL con bypass para imágenes de Películas
         const imgUrl = item.video_file 
             ? `${pb.baseUrl}/api/files/${item.collectionId}/${item.id}/${item.video_file}?ngrok-skip-browser-warning=1`
             : 'https://via.placeholder.com/200x280';
         
         contenedor.innerHTML += `
             <div class="card" id="card-${item.id}">
-                <img src="${imgUrl}" onclick="verDetalles('${item.id}', 'Movies')" style="cursor:pointer">
+                <img src="${imgUrl}" onclick="verDetalles('${item.id}', 'Movies')" style="cursor:pointer" onerror="this.src='https://via.placeholder.com/200x280'">
                 <div class="card-info">
                     <h3>${item.name}</h3>
                     <span class="badge">⬇ ${item.downloads}</span>
@@ -66,7 +66,7 @@ function renderizarCards(lista, contenedor) {
     });
 }
 
-// --- GESTIÓN DE ACTORES (CREATE) ---
+// --- GESTIÓN DE ACTORES ---
 document.getElementById('actor-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const nuevoActor = {
@@ -77,29 +77,38 @@ document.getElementById('actor-form').addEventListener('submit', async (e) => {
     };
     try {
         await pb.collection('Actors').create(nuevoActor);
-        alert("Actor guardado con éxito!");
+        alert("¡Actor guardado con éxito!");
         document.getElementById('actor-form').reset();
         window.toggleFormulario();
-    } catch (err) { alert("Error al guardar actor"); }
+    } catch (err) { 
+        alert("Error al guardar actor: Verifica la conexión"); 
+    }
 });
 
 // --- REPORTES Y FILTROS ---
 window.reporteTopDescargas = async () => {
-    const topMovies = await pb.collection('Movies').getFullList({ filter: 'downloads >= 8000', sort: '-downloads' });
+    const topMovies = await pb.collection('Movies').getFullList({ 
+        filter: 'downloads >= 8000', 
+        sort: '-downloads' 
+    });
     renderizarCards(topMovies, document.getElementById('movies-container'));
 };
 
 window.filtrarPorNombre = async () => {
     const busqueda = document.getElementById('search-input').value;
-    const resultados = await pb.collection('Movies').getFullList({ filter: `name ~ "${busqueda}"` });
+    const resultados = await pb.collection('Movies').getFullList({ 
+        filter: `name ~ "${busqueda}"` 
+    });
     renderizarCards(resultados, document.getElementById('movies-container'));
 };
 
 // --- ELIMINAR Y EDITAR ---
 window.eliminarRegistro = async (id, coleccion) => {
-    if (confirm("¿Eliminar registro?")) {
-        await pb.collection(coleccion).delete(id);
-        cargarContenido();
+    if (confirm("¿Estás seguro de eliminar este registro?")) {
+        try {
+            await pb.collection(coleccion).delete(id);
+            cargarContenido();
+        } catch(err) { alert("No se pudo eliminar."); }
     }
 };
 
@@ -111,7 +120,7 @@ window.prepararEdicion = async (id, nombreActual) => {
     }
 };
 
-// --- GRÁFICOS ---
+// --- GRÁFICOS (Chart.js) ---
 let chartInstance = null;
 window.generarGrafico = async () => {
     const movies = await pb.collection('Movies').getFullList({ sort: '-downloads' });
@@ -123,29 +132,48 @@ window.generarGrafico = async () => {
         data: {
             labels: movies.map(m => m.name),
             datasets: [{
-                label: 'Descargas',
+                label: 'Descargas por Película',
                 data: movies.map(m => m.downloads),
-                backgroundColor: 'rgba(229, 9, 20, 0.6)'
+                backgroundColor: 'rgba(229, 9, 20, 0.7)',
+                borderColor: 'rgba(229, 9, 20, 1)',
+                borderWidth: 1
             }]
+        },
+        options: {
+            responsive: true,
+            scales: { y: { beginAtZero: true } }
         }
     });
+    document.getElementById('reporte-section').scrollIntoView({ behavior: 'smooth' });
 };
 
-// --- UTILIDADES ---
+// --- UTILIDADES DE INTERFAZ ---
 window.mostrarSeccion = (tipo) => {
     document.getElementById('movies-section').style.display = tipo === 'movies' ? 'block' : 'none';
     document.getElementById('series-section').style.display = tipo === 'series' ? 'block' : 'none';
 };
+
 window.toggleFormulario = () => {
     const sec = document.getElementById('form-actor-section');
     sec.style.display = sec.style.display === 'none' ? 'block' : 'none';
 };
+
 window.verDetalles = async (id, coleccion) => {
     const record = await pb.collection(coleccion).getOne(id, { expand: 'cast,genres' });
-    const actores = record.expand?.cast?.map(a => `<li>${a.Name}</li>`).join('') || 'N/A';
-    document.getElementById('detalle-info').innerHTML = `<h2>${record.name}</h2><ul>${actores}</ul>`;
+    const actores = record.expand?.cast?.map(a => `<li>${a.Name} (${a.Country})</li>`).join('') || 'N/A';
+    const generos = record.expand?.genres?.map(g => g.name).join(', ') || 'N/A';
+    
+    document.getElementById('detalle-info').innerHTML = `
+        <h2>${record.name}</h2>
+        <p><strong>Género:</strong> ${generos}</p>
+        <p><strong>Premios:</strong> ${record.awards || 'Ninguno'}</p>
+        <h3>Reparto:</h3>
+        <ul>${actores}</ul>
+    `;
     document.getElementById('modal-detalles').style.display = 'flex';
 };
+
 window.cerrarModal = () => document.getElementById('modal-detalles').style.display = 'none';
 
+// Arranque
 cargarContenido();
