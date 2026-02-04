@@ -65,39 +65,38 @@ function renderizarCards(lista, contenedor, coleccion) {
     });
 }
 
-// --- NUEVA FUNCIÓN: REGISTRAR DESCARGA (VISTA) Y VER DETALLES ---
+// --- FUNCIÓN: REGISTRAR DESCARGA (VISTA) Y ACTUALIZAR UI ---
 window.registrarDescargaYVer = async (id, coleccion) => {
     try {
-        // 1. Obtener el registro actual para saber cuántas descargas tiene
+        // 1. Obtener el registro actual
         const record = await pb.collection(coleccion).getOne(id);
         
         // 2. Incrementar el contador (+1)
         const nuevoTotal = (parseInt(record.downloads) || 0) + 1;
         
-        // 3. Actualizar en PocketBase (esperamos a que termine con 'await')
+        // 3. Actualizar en PocketBase
         await pb.collection(coleccion).update(id, {
             "downloads": nuevoTotal
         });
 
-        // 4. ACTUALIZACIÓN CRÍTICA: Forzamos el cambio en la pantalla
+        // 4. CAMBIO INSTANTÁNEO EN PANTALLA
         const contadorUI = document.getElementById(`count-${id}`);
         if (contadorUI) {
-            contadorUI.innerText = nuevoTotal; // Aquí es donde cambia de 5000 a 5001
+            contadorUI.innerText = nuevoTotal; 
             
-            // Efecto visual de éxito (opcional)
-            contadorUI.parentElement.style.transition = "0.3s";
-            contadorUI.parentElement.style.backgroundColor = "#2ecc71"; // Verde flash
+            // Efecto visual verde de éxito
+            const parentBadge = contadorUI.parentElement;
+            parentBadge.style.backgroundColor = "#2ecc71"; 
             setTimeout(() => { 
-                contadorUI.parentElement.style.backgroundColor = "#e50914"; 
-            }, 500);
+                parentBadge.style.backgroundColor = "#e50914"; 
+            }, 600);
         }
 
-        // 5. Ahora sí, abrimos el modal de detalles
+        // 5. Abrir detalles
         window.verDetalles(id, coleccion);
 
     } catch (err) {
-        console.error("Error al procesar la descarga:", err);
-        // Si falla la red, igual mostramos la info pero avisamos
+        console.error("Error al procesar descarga:", err);
         window.verDetalles(id, coleccion);
     }
 };
