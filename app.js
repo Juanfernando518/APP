@@ -1,19 +1,32 @@
-const pb = new PocketBase('http://127.0.0.1:8090');
+// NUEVA CONEXIÓN CON NGROK
+const pb = new PocketBase("https://trifid-kerry-nonunitable.ngrok-free.dev");
+
+// Agregamos el header para saltar la advertencia de ngrok en todas las peticiones
+pb.beforeSend = function (url, options) {
+    options.headers = Object.assign({}, options.headers, {
+        'ngrok-skip-browser-warning': 'true',
+    });
+    return { url, options };
+};
 
 // --- CARGA INICIAL ---
 async function cargarContenido() {
     try {
+        // Películas
         const movies = await pb.collection('Movies').getFullList({ expand: 'genres,cast' });
         const movieContainer = document.getElementById('movies-container');
         renderizarCards(movies, movieContainer);
 
+        // Series (Respetando tu campo 'relase_date')
         const series = await pb.collection('Series').getFullList({ expand: 'genres' });
         const seriesContainer = document.getElementById('series-container');
         seriesContainer.innerHTML = '';
         series.forEach(item => {
+            // Construcción de URL de imagen compatible con ngrok
             const imgUrl = item.video_file 
-                ? `${pb.baseUrl}/api/files/${item.collectionId}/${item.id}/${item.video_file}`
+                ? `${pb.baseUrl}/api/files/${item.collectionId}/${item.id}/${item.video_file}?ngrok-skip-browser-warning=1`
                 : 'https://via.placeholder.com/200x280';
+            
             seriesContainer.innerHTML += `
                 <div class="card">
                     <img src="${imgUrl}" alt="${item.name}">
@@ -24,16 +37,19 @@ async function cargarContenido() {
                     </div>
                 </div>`;
         });
-    } catch (err) { console.error("Error cargando contenido:", err); }
+    } catch (err) { 
+        console.error("Error cargando contenido:", err); 
+    }
 }
 
-// --- FUNCIÓN UNIVERSAL PARA RENDERIZAR CARDS (CORREGIDA) ---
+// --- ACTUALIZACIÓN EN LA FUNCIÓN DE RENDERIZADO ---
 function renderizarCards(lista, contenedor) {
     contenedor.innerHTML = ''; 
     lista.forEach(item => {
         const imgUrl = item.video_file 
-            ? `${pb.baseUrl}/api/files/${item.collectionId}/${item.id}/${item.video_file}`
+            ? `${pb.baseUrl}/api/files/${item.collectionId}/${item.id}/${item.video_file}?ngrok-skip-browser-warning=1`
             : 'https://via.placeholder.com/200x280';
+        
         contenedor.innerHTML += `
             <div class="card" id="card-${item.id}">
                 <img src="${imgUrl}" onclick="verDetalles('${item.id}', 'Movies')" style="cursor:pointer">
