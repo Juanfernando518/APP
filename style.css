@@ -186,16 +186,3 @@ nav {
     background-color: #f40612;
     transform: scale(1.02);
 }
-/* Por defecto, los controles de edición están ocultos */
-.acciones {
-    display: none; 
-}
-
-/* Solo se muestran cuando el body tiene la clase 'admin-active' */
-body.admin-active .acciones {
-    display: flex;
-}
-
-body.admin-active #admin-control-section {
-    display: block !important;
-}
