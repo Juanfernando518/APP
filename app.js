@@ -46,6 +46,7 @@ async function cargarContenido() {
 function renderizarCards(lista, contenedor) {
     contenedor.innerHTML = ''; 
     lista.forEach(item => {
+        // ESTA ES LA LÍNEA QUE DEBES REEMPLAZAR:
         const imgUrl = item.video_file 
             ? `${pb.baseUrl}/api/files/${item.collectionId}/${item.id}/${item.video_file}?ngrok-skip-browser-warning=1`
             : 'https://via.placeholder.com/200x280';
