@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UPS Streaming - Gestión de Películas</title>
+    
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pocketbase/0.21.1/pocketbase.umd.js"></script>
+</head>
+<body>
+
+    <nav>
+        <h1>UPS VIDEO</h1>
+        <div class="menu">
+            <button onclick="mostrarSeccion('movies')">Películas</button>
+            <button onclick="mostrarSeccion('series')">Series</button>
+            <button onclick="toggleFormulario()" style="background:#444;">+ Nuevo Actor</button>
+            <button onclick="generarGrafico()" style="background:#00b894;">📊 Reporte</button>
+        </div>
+    </nav>
+
+    <div class="filter-bar">
+        <input type="text" id="search-input" placeholder="Buscar por nombre..." oninput="filtrarPorNombre()">
+        <button onclick="reporteTopDescargas()">🔥 Top Descargas (+8000)</button>
+        <button onclick="cargarContenido()">🔄 Mostrar Todo</button>
+    </div>
+
+    <div id="reporte-section" style="display:none; padding: 20px; background: white; margin: 20px; border-radius: 10px;">
+        <canvas id="myChart"></canvas>
+    </div>
+
+    <section id="form-actor-section" style="display:none; padding: 20px;">
+        <div class="admin-form-container">
+            <h2>Registrar Nuevo Actor</h2>
+            <form id="actor-form" class="admin-form">
+                <input type="text" id="actor-name" placeholder="Nombre completo" required>
+                <input type="text" id="actor-country" placeholder="País" required>
+                <label>Fecha de Nacimiento:</label>
+                <input type="date" id="actor-birth" required>
+                <select id="actor-gender">
+                    <option value="Masculino">Masculino</option>
+                    <option value="Femenino">Femenino</option>
+                </select>
+                <button type="submit">Guardar en Base de Datos</button>
+            </form>
+        </div>
+    </section>
+
+    <main id="content">
+        <section id="movies-section">
+            <h2>Películas Destacadas</h2>
+            <div id="movies-container" class="grid-container"></div>
+        </section>
+
+        <section id="series-section" style="display:none;">
+            <h2>Series de TV</h2>
+            <div id="series-container" class="grid-container"></div>
+        </section>
+    </main>
+
+    <div id="modal-detalles" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close" onclick="cerrarModal()">&times;</span>
+            <div id="detalle-info"></div>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
