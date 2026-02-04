@@ -9,16 +9,15 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pocketbase/0.21.1/pocketbase.umd.js"></script>
 </head>
-<body>
-
-    <nav>
+<body class="user-view"> <nav>
         <h1>UPS Streaming</h1>
         <div class="menu">
             <button onclick="mostrarSeccion('movies')">Películas</button>
             <button onclick="mostrarSeccion('series')">Series</button>
-            <button onclick="toggleFormulario()" style="background:#444;">+ Nuevo Actor</button>
-            <button onclick="generarGrafico()" style="background:#00b894;">📊 Reporte</button>
+            <button class="admin-only" onclick="toggleFormulario()" style="background:#444; display: none;">+ Nuevo Actor</button>
+            <button class="admin-only" onclick="generarGrafico()" style="background:#00b894; display: none;">📊 Reporte</button>
         </div>
+        <button id="btn-admin-mode" onclick="toggleModoAdmin()" style="background: #e50914; font-weight: bold;">🔑 Admin</button>
     </nav>
 
     <div class="filter-bar">
@@ -48,6 +47,24 @@
     <div id="reporte-section" style="display:none; padding: 20px; background: white; margin: 20px; border-radius: 10px;">
         <canvas id="myChart"></canvas>
     </div>
+
+    <section id="admin-control-section" style="display:none; padding: 20px; background: #1a1a1a; border: 1px solid #e50914; margin: 20px; border-radius: 10px;">
+        <h2 style="color: #e50914;">Panel de Control: Añadir Contenido</h2>
+        <form id="content-form" class="admin-form">
+            <input type="text" id="content-name" placeholder="Nombre de la Película/Serie" required>
+            <select id="content-type">
+                <option value="Movies">Película</option>
+                <option value="Series">Serie</option>
+            </select>
+            <input type="number" id="content-downloads" placeholder="Descargas Iniciales">
+            <input type="text" id="content-awards" placeholder="Premios">
+            <label style="color: white; display: block; margin-top: 10px;">Fecha de Estreno:</label>
+            <input type="date" id="content-date" required>
+            <input type="text" id="content-video" placeholder="Nombre de imagen (ej: inception.jpg)">
+            
+            <button type="submit" style="background: #e50914; margin-top: 10px; color: white; border: none; padding: 10px; cursor: pointer; border-radius: 5px; width: 100%;">Publicar Contenido</button>
+        </form>
+    </section>
 
     <section id="form-actor-section" style="display:none; padding: 20px;">
         <div class="admin-form-container">
