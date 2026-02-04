@@ -10,8 +10,33 @@ nav {
     justify-content: space-between;
     padding: 20px 50px;
     background: black;
+    align-items: center; /* Alinea botones y logo */
 }
 
+/* --- CLASES MAESTRAS DE VISIBILIDAD --- */
+
+/* Ocultar botones de edición y formularios por defecto */
+.acciones, 
+.admin-only, 
+#admin-control-section, 
+#form-actor-section {
+    display: none; 
+}
+
+/* Mostrar solo cuando el Modo Admin está activo */
+body.admin-active .acciones {
+    display: flex !important;
+}
+
+body.admin-active .admin-only {
+    display: inline-block !important;
+}
+
+body.admin-active #admin-control-section {
+    display: block !important;
+}
+
+/* --- ESTILOS DE GRID Y CARDS --- */
 .grid-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -24,14 +49,12 @@ nav {
     border-radius: 8px;
     overflow: hidden;
     transition: transform 0.3s;
+    position: relative;
 }
 
 .card:hover { transform: scale(1.05); }
-
 .card img { width: 100%; height: 280px; object-fit: cover; }
-
 .card-info { padding: 10px; }
-
 .card-info h3 { margin: 5px 0; font-size: 1rem; }
 
 .badge {
@@ -40,7 +63,8 @@ nav {
     border-radius: 4px;
     font-size: 0.8rem;
 }
-/* Modal de fondo */
+
+/* --- MODALES --- */
 .modal {
     position: fixed;
     z-index: 100;
@@ -67,11 +91,19 @@ nav {
     font-size: 30px;
     cursor: pointer;
 }
+
+/* --- FILTROS --- */
 .filter-bar {
     padding: 20px 50px;
     display: flex;
-    gap: 15px;
+    flex-direction: column; /* Cambiado a columna para acomodar los nuevos filtros */
+    gap: 10px;
     background: #1f1f1f;
+}
+
+.search-group {
+    display: flex;
+    gap: 15px;
     align-items: center;
 }
 
@@ -94,17 +126,16 @@ nav {
     font-weight: bold;
 }
 
-.filter-bar button:hover {
-    background: #b20710;
-}
+/* --- FORMULARIOS ADMIN --- */
 .admin-form {
-    max-width: 400px;
+    max-width: 500px; /* Un poco más ancho para el panel de contenido */
     display: flex;
     flex-direction: column;
     gap: 15px;
     background: #222;
-    padding: 20px;
+    padding: 25px;
     border-radius: 10px;
+    margin: 0 auto; /* Centrar formularios */
 }
 
 .admin-form input, .admin-form select {
@@ -115,74 +146,29 @@ nav {
     color: white;
 }
 
-.admin-form button {
-    background: #008cff;
-    color: white;
-    padding: 12px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-}
+/* Botones de acción rápida en las cards */
 .acciones {
-    display: flex;
     justify-content: space-around;
     padding-top: 10px;
+    background: rgba(0,0,0,0.5);
+    padding-bottom: 10px;
 }
 
-.btn-edit { background: #ffc107; border: none; border-radius: 3px; cursor: pointer; padding: 5px; }
-.btn-delete { background: #dc3545; border: none; border-radius: 3px; cursor: pointer; padding: 5px; }
+.btn-edit { background: #ffc107; border: none; border-radius: 3px; cursor: pointer; padding: 8px; }
+.btn-delete { background: #dc3545; border: none; border-radius: 3px; cursor: pointer; padding: 8px; }
 
-.btn-edit:hover { background: #e0a800; }
-.btn-delete:hover { background: #c82333; }
-
-/* Contenedor de filtros extra */
+/* Estilo para los filtros de fecha (Periodos) */
 .filtros-extra {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
     background: rgba(255, 255, 255, 0.05);
     padding: 15px;
     border-radius: 8px;
     border: 1px solid #333;
-    margin-top: 15px;
 }
 
-.filtros-extra label {
-    font-weight: bold;
-    margin-right: 5px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-/* Estilo para los inputs de fecha y el select */
-.filtros-extra input[type="date"], 
-.filtros-extra select {
-    background: #222;
-    color: white;
-    border: 1px solid #444;
-    padding: 8px 12px;
-    border-radius: 4px;
-    outline: none;
-    transition: all 0.3s ease;
-}
-
-.filtros-extra input[type="date"]:focus, 
-.filtros-extra select:focus {
-    border-color: #e50914; /* Rojo Netflix */
-    box-shadow: 0 0 5px rgba(229, 9, 20, 0.5);
-}
-
-/* Botón específico de filtrado */
-.filtros-extra button {
-    background-color: #e50914;
-    color: white;
-    font-weight: bold;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.3s;
-}
-
-.filtros-extra button:hover {
-    background-color: #f40612;
-    transform: scale(1.02);
+.filtros-extra input[type="date"] {
+    width: auto; /* Que no ocupe 300px como el buscador */
 }
