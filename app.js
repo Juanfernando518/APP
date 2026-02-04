@@ -72,27 +72,33 @@ window.registrarDescargaYVer = async (id, coleccion) => {
         const record = await pb.collection(coleccion).getOne(id);
         
         // 2. Incrementar el contador (+1)
-        const nuevoTotal = (record.downloads || 0) + 1;
+        const nuevoTotal = (parseInt(record.downloads) || 0) + 1;
         
-        // 3. Actualizar en PocketBase
+        // 3. Actualizar en PocketBase (esperamos a que termine con 'await')
         await pb.collection(coleccion).update(id, {
             "downloads": nuevoTotal
         });
 
-        // 4. Actualizar el número en la interfaz inmediatamente
+        // 4. ACTUALIZACIÓN CRÍTICA: Forzamos el cambio en la pantalla
         const contadorUI = document.getElementById(`count-${id}`);
         if (contadorUI) {
-            contadorUI.innerText = nuevoTotal;
-            contadorUI.parentElement.style.backgroundColor = "#2ecc71"; // Efecto visual verde al subir
-            setTimeout(() => { contadorUI.parentElement.style.backgroundColor = "#e50914"; }, 500);
+            contadorUI.innerText = nuevoTotal; // Aquí es donde cambia de 5000 a 5001
+            
+            // Efecto visual de éxito (opcional)
+            contadorUI.parentElement.style.transition = "0.3s";
+            contadorUI.parentElement.style.backgroundColor = "#2ecc71"; // Verde flash
+            setTimeout(() => { 
+                contadorUI.parentElement.style.backgroundColor = "#e50914"; 
+            }, 500);
         }
 
-        // 5. Mostrar el modal de detalles
+        // 5. Ahora sí, abrimos el modal de detalles
         window.verDetalles(id, coleccion);
 
     } catch (err) {
         console.error("Error al procesar la descarga:", err);
-        window.verDetalles(id, coleccion); // Abrir modal aunque falle el contador
+        // Si falla la red, igual mostramos la info pero avisamos
+        window.verDetalles(id, coleccion);
     }
 };
 
