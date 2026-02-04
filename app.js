@@ -46,12 +46,14 @@ function renderizarCards(lista, contenedor, coleccion) {
     });
 }
 
-// --- FUNCIONES GLOBALES (ACCESIBLES DESDE EL HTML) ---
-
+// --- LÓGICA DE MODO ADMINISTRADOR ---
 window.toggleModoAdmin = () => {
     const password = prompt("Introduce la clave de administrador:");
+    
     if (password === "admin123") {
         document.body.classList.toggle('admin-active');
+        
+        // Mostrar/Ocultar botones especiales en el menú
         const adminButtons = document.querySelectorAll('.admin-only');
         const isAdmin = document.body.classList.contains('admin-active');
         
@@ -59,75 +61,19 @@ window.toggleModoAdmin = () => {
             btn.style.display = isAdmin ? 'inline-block' : 'none';
         });
 
+        // Mostrar/Ocultar el panel de creación
         document.getElementById('admin-control-section').style.display = isAdmin ? 'block' : 'none';
+
         alert(isAdmin ? "Modo Administrador Activo" : "Modo Usuario Activo");
     } else {
         alert("Clave incorrecta.");
     }
 };
 
-window.generarGrafico = async () => {
-    try {
-        const movies = await pb.collection('Movies').getFullList({ sort: '-downloads' });
-        const ctx = document.getElementById('myChart').getContext('2d');
-        document.getElementById('reporte-section').style.display = 'block';
-        
-        if (window.chartInstance) window.chartInstance.destroy();
-        
-        window.chartInstance = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: movies.map(m => m.name),
-                datasets: [{
-                    label: 'Descargas',
-                    data: movies.map(m => m.downloads),
-                    backgroundColor: 'rgba(229, 9, 20, 0.7)',
-                    borderColor: 'rgba(229, 9, 20, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: { scales: { y: { beginAtZero: true } } }
-        });
-        document.getElementById('reporte-section').scrollIntoView({ behavior: 'smooth' });
-    } catch (err) {
-        console.error("Error al generar gráfico:", err);
-    }
-};
-
-window.filtrarPorGenero = async () => {
-    const genero = document.getElementById('genero-select').value;
-    const filtro = genero ? `genres.name ~ "${genero}"` : "";
-    try {
-        const resultados = await pb.collection(seccionActual).getFullList({ 
-            filter: filtro,
-            expand: 'genres'
-        });
-        const containerId = seccionActual.toLowerCase() + '-container';
-        renderizarCards(resultados, document.getElementById(containerId), seccionActual);
-    } catch (err) {
-        console.error("Error al filtrar por género:", err);
-    }
-};
-
-window.filtrarPorNombre = async () => {
-    const busqueda = document.getElementById('search-input').value;
-    const resultados = await pb.collection(seccionActual).getFullList({ filter: `name ~ "${busqueda}"` });
-    renderizarCards(resultados, document.getElementById(seccionActual.toLowerCase() + '-container'), seccionActual);
-};
-
-window.filtrarPorFechas = async () => {
-    const inicio = document.getElementById('fecha-inicio').value;
-    const fin = document.getElementById('fecha-fin').value;
-    if(!inicio || !fin) return alert("Selecciona fechas");
-    const filtro = `relase_date >= "${inicio} 00:00:00" && relase_date <= "${fin} 23:59:59"`;
-    const resultados = await pb.collection(seccionActual).getFullList({ filter: filtro });
-    renderizarCards(resultados, document.getElementById(seccionActual.toLowerCase() + '-container'), seccionActual);
-};
-
-// --- GESTIÓN DE CONTENIDO (ADMIN) ---
-
+// --- AGREGAR PELÍCULAS/SERIES (ADMIN) ---
 document.getElementById('content-form').addEventListener('submit', async (e) => {
     e.preventDefault();
+    
     const coleccion = document.getElementById('content-type').value;
     const nuevoContenido = {
         "name": document.getElementById('content-name').value,
@@ -141,14 +87,13 @@ document.getElementById('content-form').addEventListener('submit', async (e) => 
         await pb.collection(coleccion).create(nuevoContenido);
         alert("¡Contenido publicado con éxito!");
         document.getElementById('content-form').reset();
-        cargarContenido();
+        cargarContenido(); // Recarga automática para que el usuario lo vea
     } catch (err) {
-        alert("Error al guardar en PocketBase. Revisa los permisos API (Create).");
+        alert("Error al guardar. Verifica que los campos sean correctos.");
     }
 });
 
-// --- DETALLES Y DESCARGAS ---
-
+// --- REGISTRAR DESCARGA Y DETALLES ---
 window.registrarDescargaYVer = async (id, coleccion) => {
     try {
         const record = await pb.collection(coleccion).getOne(id);
@@ -179,8 +124,23 @@ window.verDetalles = async (id, coleccion) => {
     document.getElementById('modal-detalles').style.display = 'flex';
 };
 
-// --- UTILIDADES ---
+// --- FILTROS ---
+window.filtrarPorNombre = async () => {
+    const busqueda = document.getElementById('search-input').value;
+    const resultados = await pb.collection(seccionActual).getFullList({ filter: `name ~ "${busqueda}"` });
+    renderizarCards(resultados, document.getElementById(seccionActual.toLowerCase() + '-container'), seccionActual);
+};
 
+window.filtrarPorFechas = async () => {
+    const inicio = document.getElementById('fecha-inicio').value;
+    const fin = document.getElementById('fecha-fin').value;
+    if(!inicio || !fin) return alert("Selecciona fechas");
+    const filtro = `relase_date >= "${inicio} 00:00:00" && relase_date <= "${fin} 23:59:59"`;
+    const resultados = await pb.collection(seccionActual).getFullList({ filter: filtro });
+    renderizarCards(resultados, document.getElementById(seccionActual.toLowerCase() + '-container'), seccionActual);
+};
+
+// --- GESTIÓN DE INTERFAZ ---
 window.mostrarSeccion = (tipo) => {
     seccionActual = tipo === 'movies' ? 'Movies' : 'Series';
     document.getElementById('movies-section').style.display = tipo === 'movies' ? 'block' : 'none';
@@ -202,6 +162,21 @@ window.prepararEdicion = async (id, coleccion, nombreActual) => {
     }
 };
 
+// --- ACTORES Y EXTRAS ---
+document.getElementById('actor-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const nuevoActor = {
+        "Name": document.getElementById('actor-name').value,
+        "Country": document.getElementById('actor-country').value,
+        "BirthDate": new Date(document.getElementById('actor-birth').value).toISOString(),
+        "Gender": document.getElementById('actor-gender').value
+    };
+    await pb.collection('Actors').create(nuevoActor);
+    alert("¡Actor registrado!");
+    document.getElementById('actor-form').reset();
+    window.toggleFormulario();
+});
+
 window.toggleFormulario = () => {
     const sec = document.getElementById('form-actor-section');
     sec.style.display = sec.style.display === 'none' ? 'block' : 'none';
@@ -209,5 +184,4 @@ window.toggleFormulario = () => {
 
 window.cerrarModal = () => document.getElementById('modal-detalles').style.display = 'none';
 
-// Inicialización
 cargarContenido();
