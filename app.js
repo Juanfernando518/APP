@@ -22,7 +22,7 @@ async function cargarContenido() {
         const seriesContainer = document.getElementById('series-container');
         seriesContainer.innerHTML = '';
         series.forEach(item => {
-            // Construcción de URL de imagen compatible con ngrok
+            // REEMPLAZA TAMBIÉN AQUÍ:
             const imgUrl = item.video_file 
                 ? `${pb.baseUrl}/api/files/${item.collectionId}/${item.id}/${item.video_file}?ngrok-skip-browser-warning=1`
                 : 'https://via.placeholder.com/200x280';
